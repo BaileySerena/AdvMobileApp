@@ -10,6 +10,11 @@ import {
 } from './utils/MessageUtils';
 import Toolbar from './components/Toolbar';
 import ImageGrid from './components/ImageGrid';
+import KeyboardState from './components/KeyboardState';
+import MeasureLayout from './components/MeasureLayout';
+import MessagingContainer, {
+  INPUT_METHOD,
+} from './components/MessagingContainer';
 
 
 export default class App extends React.Component {
@@ -31,16 +36,35 @@ export default class App extends React.Component {
     );
   }
 
-  render() {
-    return (
-      <view style={styles.container}>
-        <Status />
-        {this.renderMessageList()}
-        {this.renderToolbar()}
-        {this.renderInputMethodEditor()}
-      </view>
-    );
-  }
+render() {
+  const { inputMethod } = this.state;
+
+  return (
+    <View style={styles.container}>
+      <Status />
+      <MeasureLayout>
+        {layout => (
+          <KeyboardState layout={layout}>
+            {keyboardInfo => (
+              <MessagingContainer
+              {...keyboardInfo}
+              inputMethod={inputMethod}
+              onChangeInputMethod={this.handleChangeInputMethod}
+              renderInputMethodEditor={
+                this.renderInputMethodEditor
+              }
+              >
+              {this.renderMessageList()}
+              {this.renderToolbar()}
+              </MessagingContainer>
+            )}
+          </KeyboardState>
+        )}
+      </MeasureLayout>
+      {this.renderFullScreenImage()}
+    </View>
+  );
+}
 
   state = {
     messages: [
@@ -54,11 +78,19 @@ export default class App extends React.Component {
     ],
     fullscreenImageId: null,
     isInputFocused: false,
+    inputMethod: INPUT_METHOD.NONE,
+  };
+
+  handleChangeInputMethod = (inputMethod) => {
+    this.setState({ inputMethod });
   };
 
   handlePressToolbarCamera = () => {
-    //...
-  }
+    this.setState({
+      isInputFocused: false,
+      inputMethod: INPUT_METHOD.CUSTOM,
+    });
+  };
 
   handlePressToolbarLocation = () => {
     const { messages } = this.state;
@@ -178,18 +210,6 @@ export default class App extends React.Component {
         messages={messages}
         onPressMessage={this.handlePressMessage}
         />
-      </View>
-    );
-  }
-
-  render() {
-    return (
-      <View style={styles.container}>
-        <Status />
-        {this.renderMessageList()}
-        {this.renderToolbar()}
-        {this.renderInputMethodEditor()}
-        {this.renderFullScreenImage()}
       </View>
     );
   }
